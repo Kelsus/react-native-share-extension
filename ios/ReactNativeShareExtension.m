@@ -4,6 +4,7 @@
 
 #define URL_IDENTIFIER @"public.url"
 #define IMAGE_IDENTIFIER @"public.image"
+#define VIDEO_IDENTIFIER (NSString *)kUTTypeQuickTimeMovie
 #define TEXT_IDENTIFIER (NSString *)kUTTypePlainText
 
 NSExtensionContext* extensionContext;
@@ -67,7 +68,7 @@ RCT_REMAP_METHOD(data,
         __block NSItemProvider *urlProvider = nil;
         __block NSItemProvider *imageProvider = nil;
         __block NSItemProvider *textProvider = nil;
-
+        __block NSItemProvider *videoProvider = nil;
         [attachments enumerateObjectsUsingBlock:^(NSItemProvider *provider, NSUInteger idx, BOOL *stop) {
             if([provider hasItemConformingToTypeIdentifier:URL_IDENTIFIER]) {
                 urlProvider = provider;
@@ -77,6 +78,9 @@ RCT_REMAP_METHOD(data,
                 *stop = YES;
             } else if ([provider hasItemConformingToTypeIdentifier:IMAGE_IDENTIFIER]){
                 imageProvider = provider;
+                *stop = YES;
+            }else if ([provider hasItemConformingToTypeIdentifier:VIDEO_IDENTIFIER]){
+                videoProvider = provider;
                 *stop = YES;
             }
         }];
@@ -92,7 +96,15 @@ RCT_REMAP_METHOD(data,
         } else if (imageProvider) {
             [imageProvider loadItemForTypeIdentifier:IMAGE_IDENTIFIER options:nil completionHandler:^(id<NSSecureCoding> item, NSError *error) {
                 NSURL *url = (NSURL *)item;
-
+                
+                if(callback) {
+                    callback([url absoluteString], [[[url absoluteString] pathExtension] lowercaseString], nil);
+                }
+            }];
+        } else if (videoProvider) {
+            [videoProvider loadItemForTypeIdentifier:VIDEO_IDENTIFIER options:nil completionHandler:^(id<NSSecureCoding> item, NSError *error) {
+                NSURL *url = (NSURL *)item;
+                
                 if(callback) {
                     callback([url absoluteString], [[[url absoluteString] pathExtension] lowercaseString], nil);
                 }
